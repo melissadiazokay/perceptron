@@ -151,11 +151,12 @@ def encodeOutput(number):
 	
 def decodeOutput(outputLayerActivations):
 
+	greatest_num = 0
 	for i in range(len(outputLayerActivations)): 
-
-		pass
-		
-
+		if outputLayerActivations[i] > greatest_num: 
+			greatest_num = outputLayerActivations[i]
+			guess = i
+	return guess
 
 
 # ------ run below here -------
@@ -182,13 +183,11 @@ net.runNetwork(input)
 
 # get the output
 output = net.getOutput()
-print 'output: ', output
-
-print decodeOutput(output)
+print 'output:', decodeOutput(output)
 
 # compute the cost
 expectedOutput = encodeOutput(testImgValue)
-print 'expected output: ', expectedOutput
+# print 'expected output:', testImgValue
 cost = net.calculateCost(expectedOutput)
 print 'cost:', cost
 
