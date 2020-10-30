@@ -216,24 +216,29 @@ def sigmoid(x):
 mndata = MNIST('./mnist')
 images, labels = mndata.load_training()
 
-chunk_size = 10
+input_layer_size = len(images[0])
+data_chunk_size = 10
 
 # initialize the network
-net = Network([784,16,16,10],sigmoid)
+net = Network([input_layer_size,16,16,10],sigmoid)
 net.initializeNetwork()
 
 # run the network
-run = Run(net, {	
-	'images' : images[:chunk_size],
-	'labels' : labels[:chunk_size]
+run = Run(net, {
+	'images' : images[:data_chunk_size],
+	'labels' : labels[:data_chunk_size]
 },True)
 
 cost = run.computeTotalCost()
 print 'Total cost:', cost
 
+# run.run(images[0],labels[0])
+# run.run(images[1],labels[1])
+# run.run(images[2],labels[2])
+# run.run(images[3],labels[3])
+# run.run(images[4],labels[4])
 
-# test = run.run(images[0],labels[0])
-# print test
+
 
 
 
