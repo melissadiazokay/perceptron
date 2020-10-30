@@ -138,27 +138,38 @@ def normalizeMNIST(image):
 			image[i] = (255 - float(image[i]))/255
 	return image
 
-def convertToOutput(number):
+def encodeOutput(number):
 
-	print number
+	output = []
+
+	for i in range(10): 
+		if i == number:
+			output.append(1)
+		else: output.append(0)
+
+	return output
 	
+def decodeOutput(outputLayerActivations):
 
-# ------ run below here ------- 
+	for i in range(len(outputLayerActivations)): 
+
+		pass
+		
+
+
+
+# ------ run below here -------
 
 mndata = MNIST('./mnist')
 images, labels = mndata.load_training()
 
-
-test_image_index = 10
-
+# choose a random image
+test_image_index = random.randint(1, len(images)-1)
 testImg = normalizeMNIST(images[test_image_index])
 testImgValue = labels[test_image_index]
-# print 'test image:',testImgValue
+print 'image:',testImgValue
 
-convert = convertToOutput(testImgValue)
-
-# input = [] # empty input (to run network with random input values)
-input = testImg
+input = testImg # [] to initialize with random values
 
 inputLayerSize = len(testImg)
 
@@ -171,12 +182,15 @@ net.runNetwork(input)
 
 # get the output
 output = net.getOutput()
-# print 'output: ', output
+print 'output: ', output
+
+print decodeOutput(output)
 
 # compute the cost
-expectedOutput = [0,0,0,0,0,1,0,0,0,0] # represents a 3
+expectedOutput = encodeOutput(testImgValue)
+print 'expected output: ', expectedOutput
 cost = net.calculateCost(expectedOutput)
-# print 'cost:', cost
+print 'cost:', cost
 
 
 
