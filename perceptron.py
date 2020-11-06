@@ -298,12 +298,13 @@ mndata = MNIST('./mnist')
 images, labels = mndata.load_training()
 
 # prepare input data
-input_layer_size = len(images[0])
+input_layer_size = len(images[0]) # 784
 data_chunk_size = 10
 def sigmoid(x): return 1 / (1 + math.exp(-x))
 
 # initialize the network
-net = Network([input_layer_size,16,16,10],sigmoid)
+network_architecture = [input_layer_size,16,16,10] # two hidden layers of 16 neurons each
+net = Network(network_architecture,sigmoid)
 net.initializeNetwork()
 
 # run the network
@@ -312,16 +313,13 @@ run = Run(net, {
 	'labels' : labels[:data_chunk_size]
 },True)
 
-# compute the total cost
-# cost = run.computeTotalCost()
-# print( '\nTotal cost:', cost )
-
+# pass a single image
 test_image_index = 0
 
 result = run.run(images[test_image_index],labels[test_image_index])
 print('output',result)
 
-# back propagation
+# do back propagation
 run.doBackProp(result['expected_output'])
 # print('\nweights after:',net.weights[3])
 
