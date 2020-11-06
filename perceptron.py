@@ -9,7 +9,7 @@ class Neuron():
 		self.activation = activation
 		self.bias = bias
 
-	def think(self,weights,activations,activationFunction, verbose = False):
+	def think(self,weights,activations,activationFunction,verbose = False):
 
 		# update own activation as per activationFunction( sum( weights_previous_layer * activations_previous layer) + bias )
 		# ---
@@ -25,7 +25,7 @@ class Neuron():
 		newActivation = activationFunction(sigma + self.bias)
 
 		if(verbose): 
-			print('sigma:',sigma,'\nbias:',self.bias,'\nactivation:',newActivation)
+			print('old activation:',self.activation,'\nsigma:',sigma,'\nbias:',self.bias,'\nnew activation:',newActivation)
 
 		self.activation = newActivation
 
@@ -48,6 +48,7 @@ class Network(Neuron):
 		self.biases = []
 		self.input = []
 		self.output = []
+		self.gradient = []
 
 	def initializeNetwork(self):
 
@@ -59,12 +60,14 @@ class Network(Neuron):
 		# all the input weights to all neurons indexed by [layer index][neuron index]
 		self.weights = [] * len(self.structure)
 		self.biases = [] * len(self.structure)
+		self.gradient = [] * len(self.structure)
 
 		# initialize network structure, weights, and biases 
 		for i, n_neurons in enumerate(self.structure):
 			layer = []
 			self.weights.append([])
 			self.biases.append([])
+			self.gradient.append([])
 			for j in range(n_neurons):
 				self.initializeWeights(i)
 				bias = random.uniform(-1,1)
@@ -81,11 +84,15 @@ class Network(Neuron):
 
 		if(layerIndex == 0): # first layer does not have input weights - fill with placeholders
 			self.weights[0].append([])
+			self.gradient[0].append([])
 		else: # fill with input weights corresponding to neurons from the **last** layer
-			arr = []
+			arr = [] 
+			arr2 = []
 			for k in range(self.structure[layerIndex - 1]):
 				arr.append(random.uniform(-1,1))
+				arr2.append(0)
 			self.weights[layerIndex].append(arr)
+			self.gradient[layerIndex].append(arr2)
 
 	def runNetwork(self, input = [], verbose = False):
 
@@ -197,7 +204,7 @@ class Run(Network):
 		if(self.verbose): 
 			print('\nimage label:', label, '\noutput:', self.decodeOutput(output), '\ncost:', cost )
 
-		return { 'output' : output, 'cost' : cost }
+		return { 'output' : output, 'expected_output' : expectedOutput, 'cost' : cost }
 
 	def encodeOutput(self,number):
 
@@ -226,6 +233,63 @@ class Run(Network):
 				image[i] = (255 - float(image[i]))/255
 		return image
 
+	def doBackProp(self,gradient):
+
+		if(self.verbose == True):
+			print('\nRunning back propagation..')
+
+		self.gradientDescent(gradient, len(self.net.layers)-1)
+		self.applyNegativeGradient()
+
+		if(self.verbose == True):
+			print('\nback propagation complete.')
+
+
+	def applyNegativeGradient(self):
+
+		for i,layer in enumerate(self.net.weights):
+			if(i == 0): continue
+			print('\n\n------- Layer',i)
+			for j,neuron in enumerate(self.net.weights[i]):
+				print('\nNeuron',j)
+				for k,weight in enumerate(self.net.weights[i][j]):
+					print(self.net.weights[i][j][k],'->',self.net.weights[i][j][k] + self.net.gradient[i][j][k])
+					self.net.weights[i][j][k] += self.net.gradient[i][j][k]
+
+
+	def gradientDescent(self, gradient, n_layer):
+
+		if(n_layer == 0): return # exit on input layer
+
+		# print('\n\n------- Layer',n_layer)
+
+		for i, Neuron in enumerate(net.layers[n_layer]):
+
+			# print('\nNeuron',i)
+
+			diff = gradient[i] - Neuron.getActivation()
+			for j,w in enumerate(self.net.weights[n_layer][i]):
+				self.net.gradient[n_layer][i][j] = abs(w)*diff
+
+			# print(self.net.gradient[n_layer][i])
+
+		if(n_layer == 1): return # dont need negative gradient for input layer
+
+		# assemble gradient for previous layer
+		totalGradient = []
+		for nudges in self.net.gradient[n_layer]:
+			for i, nudge in enumerate(nudges):
+				if i < len(totalGradient):
+					totalGradient[i] += nudge
+				else: 
+					totalGradient.append(nudge) 
+
+		# print('\n\nTotal gradient\n',totalGradient)
+
+		self.gradientDescent(totalGradient, n_layer - 1)
+
+				
+
 
 # ------ run below here -------
 
@@ -246,18 +310,24 @@ net.initializeNetwork()
 run = Run(net, {
 	'images' : images[:data_chunk_size],
 	'labels' : labels[:data_chunk_size]
-},False)
+},True)
 
 # compute the total cost
-cost = run.computeTotalCost()
-print( '\nTotal cost:', cost )
+# cost = run.computeTotalCost()
+# print( '\nTotal cost:', cost )
 
+test_image_index = 0
 
-# run.run(images[0],labels[0])
-# run.run(images[1],labels[1])
-# run.run(images[2],labels[2])
-# run.run(images[3],labels[3])
-# run.run(images[4],labels[4])
+result = run.run(images[test_image_index],labels[test_image_index])
+print('output',result)
+
+# back propagation
+run.doBackProp(result['expected_output'])
+# print('\nweights after:',net.weights[3])
+
+# result = run.run(images[test_image_index],labels[test_image_index])
+# print('output after',result)
+
 
 
 
